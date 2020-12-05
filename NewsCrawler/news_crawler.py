@@ -49,6 +49,7 @@ class ArticleCrawler(object):
         batch_size = 1000  # 10000개씩 쪼개서 s3에 넣자
         i = 0
         failed_urls = []  # 실패한 기사들은 다시 시도할 수 있게 따로 db에 써두자
+        failed_count = 0
         for i in range(int(len(crawling_targets) / batch_size) + 1):
             batch = {}
             for target in crawling_targets[i * batch_size:(i + 1) * batch_size]:
