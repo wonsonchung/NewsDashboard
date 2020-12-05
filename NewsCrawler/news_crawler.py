@@ -82,12 +82,10 @@ class ArticleCrawler(object):
                     if not text_sentence:  # 공백일 경우 기사 제외 처리
                         continue
 
-                    # 기사 언론사 가져옴
+                    # 기사 언론사 가져옴(공백 허용)
                     tag_company = document_content.find_all('meta', {'property': 'me2:category1'})
                     text_company = ''  # 언론사 초기화
                     text_company = text_company + str(tag_company[0].get('content'))
-                    if not text_company:  # 공백일 경우 기사 제외 처리
-                        continue
 
                     # 기사 작성 날짜
                     tag_date = document_content.find_all('span', {'class': 't11'})
