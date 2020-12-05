@@ -9,6 +9,8 @@ start_date = 20200901
 end_date = 20200902 # date는 이상/이하 조건으로 들어가므로 end_date 도 긁어옵니다.
 batch = 1 # 3일 단위로 묶어서 크롤
 for i in range((end_date - start_date -1)//batch + 1):
+    start_time = time.time()
+
     start = start_date + i * batch
     end = start_date + (i + 1) * batch - 1
     if end > end_date:
@@ -19,5 +21,6 @@ for i in range((end_date - start_date -1)//batch + 1):
     print(f"Crawling {start} ~ {end} start!")
     Crawler.start()
     print(f"Crawling {start} ~ {end} Done!")
+    print(f"==========================={time.time() - start_time} seconds ============================")
 
     time.sleep(60)
