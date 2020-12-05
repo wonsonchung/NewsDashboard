@@ -163,13 +163,21 @@ class UrlCrawler(object):
             else:
                 continue
 
-        print(f"Done: category_name PID: {str(os.getpid())} /{count} url")
+        if len(news_metadata) > 0:
+            try:
+                Writer.insert_values_to_db('news_metadata', news_metadata)
+                count += len(news_metadata)
+                news_metadata = []
+            except Exception as e:
+                print(e, '\n' + category_name + " PID: " + str(os.getpid()) + " Date: " +
+                      URL.split('&')[-2].split('=')[1] + "Is FAILED")
+
+        print(f"Done: {category_name} PID: {str(os.getpid())} /{count} url")
 
     def start(self):
         # MultiProcess 크롤링 시작
         # 카테고리별로 한 프로세스
         procs = []
-
         for category_name in self.selected_categories:
             proc = Process(target=self.url_crawling, args=(category_name,))
             procs.append(proc)
