@@ -154,7 +154,7 @@ class UrlCrawler(object):
 
             if len(news_metadata) >= batch_size:
                 try:
-                    Writer.insert_values_to_db('news_metadata', news_metadata)
+                    Writer.insert_values_to_db('news_metadata_temp', news_metadata)
                     count += len(news_metadata)
                     news_metadata = []
                 except Exception as e:
@@ -165,7 +165,7 @@ class UrlCrawler(object):
 
         if len(news_metadata) > 0:
             try:
-                Writer.insert_values_to_db('news_metadata', news_metadata)
+                Writer.insert_values_to_db('news_metadata_temp', news_metadata)
                 count += len(news_metadata)
                 news_metadata = []
             except Exception as e:
