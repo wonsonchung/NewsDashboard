@@ -1,14 +1,8 @@
 import psycopg2.extras
 from typing import List, Dict
-import s3fs
+from NewsCrawler.db_config import CONFIG
 
 class Writer(object):
-
-    host = 'ybigta-news.cga4jkz7xhwb.ap-northeast-2.rds.amazonaws.com'
-    user = 'news'
-    pwd = 'ybigta1234'
-    database = 'dev'
-    port = 5432
 
     @classmethod
     def to_db_value(cls, values: List[Dict]) -> List[str]:
@@ -26,8 +20,7 @@ class Writer(object):
     @classmethod
     def insert_to_db(cls, table: str, values: List[str]):
         query = f''' insert into {table} values {','.join(values)}'''
-        db_con = psycopg2.connect(database=cls.database, host=cls.host, user=cls.user, \
-                                  password=cls.pwd, port=cls.port)
+        db_con = psycopg2.connect(**CONFIG)
         db_cur = db_con.cursor(cursor_factory=psycopg2.extras.DictCursor)
         db_cur.execute(query)
         db_con.commit()
