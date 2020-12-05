@@ -63,7 +63,7 @@ class Writer(object):
     def update_metadata_crawled_true(cls, ids: List[int]):
         db_con = psycopg2.connect(**CONFIG)
         db_cur = db_con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        query = f''' UPDATE news_metadata_temp SET news_crawled = true 
+        query = f''' UPDATE news_metadata SET news_crawled = true 
                      WHERE aid in ({','.join(str(id) for id in ids)})'''
         db_cur.execute(query)
         db_con.commit()
