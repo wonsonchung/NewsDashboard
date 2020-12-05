@@ -1,6 +1,8 @@
 import psycopg2.extras
 from typing import List, Dict
 from NewsCrawler.db_config import CONFIG
+import boto3
+import json
 
 class Writer(object):
 
@@ -32,3 +34,30 @@ class Writer(object):
             cls.insert_to_db(table, values_to_insert)
         except Exception as e:
             print(e, '\n==>', [x['aid'] for x in values])
+
+    @classmethod
+    def get_url_to_crawl(cls, category: int, start_date: str, end_date: str) -> List[List]:
+        urls = []
+        db_con = psycopg2.connect(**CONFIG)
+        db_cur = db_con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query = f''' SELECT category, aid, url FROM news_metadata \
+                     WHERE upload_date >= {start_date} and upload_date <= {end_date}\
+                     AND category = {category}'''
+        db_cur.execute(query)
+
+        result = db_cur.fetchall()
+        db_con.rollback()
+        return result
+
+    @classmethod
+    def write_json_to_s3(cls, category_name: str, value: Dict, file_name: str):
+
+        session = boto3.Session(profile_name='ybigta-conference')
+        client = session.client('s3')
+        client.put_object(
+            Body=str(json.dumps(value)),
+            ContentEncoding='utf8',
+            Bucket='naver-news-dev',
+            Key=f"news_content/{category_name}/{file_name}.json"
+        )
+
