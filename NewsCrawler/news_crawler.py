@@ -27,6 +27,7 @@ class ArticleCrawler(object):
                         "Accept": "text/html",
                         "Pragma": "no-cache",
                         "Cache-Control": "no-cache"}
+        self.done_aid = []
 
     def set_category(self, *args: List[str]):
         """ 한글로 받은 카테고리를 고유번호로 매핑 """
@@ -43,18 +44,18 @@ class ArticleCrawler(object):
         # 크롤링 대상이 될 뉴스를 [[카테고리번호, aid, url]]로 불러온다.
         crawling_targets = Writer.get_url_to_crawl(self.categories[category_name], self.start_date, self.end_date)
         print(f"Start: {category_name}, {self.start_date} ~ {self.end_date} has {len(crawling_targets)} urls")
+        delimiter = ''.join(random.choices(string.digits, k=4))
 
-        batch_size = 100  # 10000개씩 쪼개서 s3에 넣자
+        batch_size = 1000  # 10000개씩 쪼개서 s3에 넣자
         i = 0
-        failed_urls = [] # 실패한 기사들은 다시 시도할 수 있게 따로 db에 써두자
-        success_aid = [] # 성공한 애들은 metadata에 crawled = true로 바꿔줘야 하므로 따로 모은다.
+        failed_urls = []  # 실패한 기사들은 다시 시도할 수 있게 따로 db에 써두자
         for i in range(int(len(crawling_targets) / batch_size) + 1):
             batch = {}
             for target in crawling_targets[i * batch_size:(i + 1) * batch_size]:
                 category = target[0]
                 aid = target[1]
                 url = target[2]
-                sleep(0.02)
+                sleep(0.01)
                 # 기사 HTML 가져옴
                 request_content = self.get_url_data(url)
                 try:
@@ -95,6 +96,7 @@ class ArticleCrawler(object):
                     if not text_date:
                         continue
 
+                    self.done_aid.append(aid)
                     batch[aid] = {"category": category, "aid": aid, "date": text_date, "title": text_headline, \
                                   "content": text_sentence, "company": text_company}
 
@@ -103,34 +105,47 @@ class ArticleCrawler(object):
                     del tag_content, tag_headline
                     del request_content, document_content
 
-                    success_aid.append(aid)
-
                 except IndexError:
                     value = {"aid": aid, "url": url}
                     failed_urls.append(value)
+                    print(f"failed: {value}")
                     del request_content, document_content
                     pass
                 except Exception as e:  # UnicodeEncodeError ..
                     print(f"Parsing failed for url:{url}, Error: {e}")
                     value = {"aid": aid, "url": url}
                     failed_urls.append(value)
+                    print(f"failed: {value}")
                     del request_content, document_content
                     pass
 
             # 파일 이름이 중복될 수도 있으니 구분자로 랜덤 숫자을 파일이름에 붙여준다
-            file_name = f"{str(self.start_date)}_{str(self.end_date)}_{i}_{''.join(random.choices(string.digits, k=4))}"
+            file_name = f"{str(self.start_date)}_{str(self.end_date)}_{i}_{delimiter}"
             try:
                 Writer.write_json_to_s3(category_name, batch, file_name)
-                print(f"writing {file_name} is Done.")
+                print(f"writing {category_name}/{file_name}.json is Done.")
             except Exception as e:
                 print(f"Failed to write in s3: {category_name}, {self.start_date}, {self.end_date}, batch: {i}")
 
-            if failed_urls:
-                # 실패한 애들은 따로 DB 에 넣어준다
-                Writer.insert_values_to_db('failed_urls', failed_urls)
-                failed_urls = []
+        if failed_urls:
+            # 실패한 애들은 따로 DB 에 넣어준다
+            Writer.insert_values_to_db('failed_urls', failed_urls)
+            failed_count = len(failed_urls)
+            del failed_urls
 
+        # 크롤링된 id는 db에서 news_crawled = true로 바꿔준다
+        batch_size = 2000
+        i = 0
+        for i in range(int(len(self.done_aid) / batch_size) + 1):
+            batch = self.done_aid[i * batch_size: (i + 1) * batch_size]
 
+            Writer.update_metadata_crawled_true(batch)
+
+        print(f"Every Work on {category_name} {self.start_date} ~ {self.end_date} Done.\
+              success: {len(self.done_aid)} passed: {len(crawling_targets) - len(self.done_aid) - failed_count}\
+              Failed: {failed_count}")
+
+        return "Done"
 
     def get_url_data(self, url: str, max_tries=10):
         remaining_tries = int(max_tries)
@@ -145,9 +160,13 @@ class ArticleCrawler(object):
 
     def start(self):
         # MultiProcess 크롤링 시작
+        procs = []
         for category_name in self.selected_categories:
             proc = Process(target=self.crawling, args=(category_name,))
+            procs.append(proc)
             proc.start()
+        for proc in procs:
+            proc.join()
 
 
 if __name__ == "__main__":

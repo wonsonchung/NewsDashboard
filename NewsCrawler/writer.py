@@ -16,7 +16,6 @@ class Writer(object):
 
             value = f''' ({(",".join(list(row.values()))).strip('"')}) '''
             values_to_insert.append(value)
-
         return values_to_insert
 
     @classmethod
@@ -37,7 +36,6 @@ class Writer(object):
 
     @classmethod
     def get_url_to_crawl(cls, category: int, start_date: str, end_date: str) -> List[List]:
-        urls = []
         db_con = psycopg2.connect(**CONFIG)
         db_cur = db_con.cursor(cursor_factory=psycopg2.extras.DictCursor)
         query = f''' SELECT category, aid, url FROM news_metadata \
@@ -60,4 +58,14 @@ class Writer(object):
             Bucket='naver-news-dev',
             Key=f"news_content/{category_name}/{file_name}.json"
         )
+
+    @classmethod
+    def update_metadata_crawled_true(cls, ids: List[int]):
+        db_con = psycopg2.connect(**CONFIG)
+        db_cur = db_con.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        query = f''' UPDATE news_metadata_temp SET news_crawled = true 
+                     WHERE aid in ({','.join(str(id) for id in ids)})'''
+        db_cur.execute(query)
+        db_con.commit()
+
 
