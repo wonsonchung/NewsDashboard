@@ -133,12 +133,13 @@ class ArticleCrawler(object):
             del failed_urls
 
         # 크롤링된 id는 db에서 news_crawled = true로 바꿔준다
-        batch_size = 2000
-        i = 0
-        for i in range(int(len(self.done_aid) / batch_size) + 1):
-            batch = self.done_aid[i * batch_size: (i + 1) * batch_size]
+        if self.done_aid:
+            batch_size = 2000
+            i = 0
+            for i in range(int(len(self.done_aid) / batch_size) + 1):
+                batch = self.done_aid[i * batch_size: (i + 1) * batch_size]
 
-            Writer.update_metadata_crawled_true(batch)
+                Writer.update_metadata_crawled_true(batch)
 
         print(f"Every Work on {category_name} {self.start_date} ~ {self.end_date} Done.\
               success: {len(self.done_aid)} passed: {len(crawling_targets) - len(self.done_aid) - failed_count}\
