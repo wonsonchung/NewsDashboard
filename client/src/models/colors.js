@@ -1,0 +1,1 @@
+export const NAVER_COLOR = "#2DB400";
