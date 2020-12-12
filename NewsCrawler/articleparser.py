@@ -17,13 +17,14 @@ class ArticleParser(object):
         special_symbol_removed_content = re.sub(cls.special_symbol, ' ', newline_symbol_removed_text)
         end_phrase_removed_content = re.sub(cls.content_pattern, '', special_symbol_removed_content)
         blank_removed_content = re.sub(' +', ' ', end_phrase_removed_content).lstrip()  # 공백 에러 삭제
-        reversed_content = ''.join(reversed(blank_removed_content))  # 기사 내용을 reverse 한다.
         content = ''
-        for i in range(0, len(blank_removed_content)):
-            # reverse 된 기사 내용중, ".다"로 끝나는 경우 기사 내용이 끝난 것이기 때문에 기사 내용이 끝난 후의 광고, 기자 등의 정보는 다 지움
-            if reversed_content[i:i + 2] == '.다':
-                content = ''.join(reversed(reversed_content[i:]))
+
+        for i in range(len(blank_removed_content), 0, -1):
+            if blank_removed_content[i:i + 2] == '다.':
+                content = ''.join(blank_removed_content[:i + 2])
+                print(content)
                 break
+
         return content
 
     @classmethod
