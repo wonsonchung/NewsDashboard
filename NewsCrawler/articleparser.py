@@ -1,8 +1,6 @@
-from bs4 import BeautifulSoup
-import requests
 import re
 from datetime import datetime
-from typing import List, Dict
+from typing import Dict
 from NewsCrawler.exceptions import *
 
 
@@ -22,7 +20,6 @@ class ArticleParser(object):
         for i in range(len(blank_removed_content), 0, -1):
             if blank_removed_content[i:i + 2] == '다.':
                 content = ''.join(blank_removed_content[:i + 2])
-                print(content)
                 break
 
         return content
