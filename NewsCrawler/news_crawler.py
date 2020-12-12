@@ -7,11 +7,16 @@ import requests
 from typing import List
 import random
 import string
-
+import logging
 from NewsCrawler.exceptions import *
 from NewsCrawler.articleparser import ArticleParser
 from NewsCrawler.writer import Writer
 from NewsCrawler.category import categories
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s : %(message)s',
+                    datefmt="%Y-%m-%d %H:%M:%S")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class ArticleCrawler(object):
@@ -35,15 +40,14 @@ class ArticleCrawler(object):
             if self.categories.get(key) is None:
                 raise InvalidCategory(key)
         self.selected_categories = cate_list
-        print(self.selected_categories)
+        logger.info(self.selected_categories)
 
     def crawling(self, category_name):
         # Multi Process PID
-        print(category_name + " PID: " + str(os.getpid()))
-
+        logger.info(f"{category_name} PID: {str(os.getpid())}")
         # 크롤링 대상이 될 뉴스를 [[카테고리번호, aid, url]]로 불러온다.
         crawling_targets = Writer.get_url_to_crawl(self.categories[category_name], self.start_date, self.end_date)
-        print(f"Start: {category_name}, {self.start_date} ~ {self.end_date} has {len(crawling_targets)} urls")
+        logger.info(f"Start: {category_name}, {self.start_date} ~ {self.end_date} has {len(crawling_targets)} urls")
         delimiter = ''.join(random.choices(string.digits, k=4))
 
         batch_size = 1000  # 10000개씩 쪼개서 s3에 넣자
@@ -60,7 +64,7 @@ class ArticleCrawler(object):
                 try:
                     document_content = BeautifulSoup(request_content.content, 'html.parser')
                 except Exception as e:
-                    print(f"crawling failed for url:{url}, Error: {e}")
+                    logger.error(f"crawling failed for url:{url}, Error: {e}")
                     continue
 
                 try:
@@ -108,7 +112,7 @@ class ArticleCrawler(object):
                     del request_content, document_content
                     pass
                 except Exception as e:  # UnicodeEncodeError ..
-                    print(f"Parsing failed for url:{url}, Error: {e}")
+                    logger.error(f"Parsing failed for url:{url}, Error: {e}")
                     value = {"aid": aid, "url": url}
                     failed_urls.append(value)
                     del request_content, document_content
@@ -118,9 +122,9 @@ class ArticleCrawler(object):
             file_name = f"{str(self.start_date)}_{str(self.end_date)}_{i}_{delimiter}"
             try:
                 Writer.write_json_to_s3(category_name, batch, file_name)
-                print(f"writing {category_name}/{file_name}.json is Done.")
+                logger.info(f"writing {category_name}/{file_name}.json is Done.")
             except Exception as e:
-                print(f"Failed to write in s3: {file_name}, batch: {i}, Error: {e}")
+                logger.info(f"Failed to write in s3: {file_name}, batch: {i}, Error: {e}")
 
         if failed_urls:
             # 실패한 애들은 따로 DB 에 넣어준다
@@ -138,7 +142,7 @@ class ArticleCrawler(object):
 
                 Writer.update_metadata_crawled_true(batch)
 
-        print(f"Every Work on {category_name} {self.start_date} ~ {self.end_date} Done.\
+        logger.info(f"Every Work on {category_name} {self.start_date} ~ {self.end_date} Done.\
               success: {len(self.done_aid)} passed: {len(crawling_targets) - len(self.done_aid) - failed_count}\
               Failed: {failed_count}")
 

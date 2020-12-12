@@ -7,11 +7,16 @@ import requests
 import re
 from datetime import datetime
 from typing import List, Dict
+import logging
 from NewsCrawler.category import categories
 from NewsCrawler.exceptions import *
 from NewsCrawler.articleparser import ArticleParser
 from NewsCrawler.writer import Writer
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s : %(message)s',
+                    datefmt="%Y-%m-%d %H:%M:%S")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class UrlCrawler(object):
 
@@ -34,7 +39,7 @@ class UrlCrawler(object):
                 raise InvalidCategory(key)
 
         self.selected_categories = cate_list
-        print(self.selected_categories)
+        logger.info(self.selected_categories)
 
     def set_date_range(self, start_month: int, start_day: int, end_month: int, end_day: int):
         """ 주어진 날짜 범위가 유효한지 판단하고, self.date 형태로 내보낸다."""
@@ -48,11 +53,11 @@ class UrlCrawler(object):
             raise OverbalanceMonth(start_month, end_month)
         for key, date in zip(self.date, args):
             self.date[key] = date
-        print(self.date)
+        logger.info(self.date)
 
     def make_news_page_url(self, category_url: str, start_month, start_day, end_month, end_day) -> List[str]:
         made_urls = []
-        print("making news_page_url start")
+        logger.info("making news_page_url start")
         for month in range(start_month, end_month + 1):
             if start_month == end_month:
                 month_startday = start_day
@@ -83,7 +88,7 @@ class UrlCrawler(object):
                 for page in range(1, totalpage + 1):
                     made_urls.append(url + "&page=" + str(page))
 
-        print('made_urls:', len(made_urls))
+        logger.info(f'made_urls: {len(made_urls)}')
         return made_urls
 
     def find_news_totalpage(self, url: str) -> int:
@@ -97,7 +102,7 @@ class UrlCrawler(object):
             match = regex.findall(str(headline_tag))
             return int(match[0])
         except Exception as e:
-            print(e)
+            logger.error(e)
             return 0
 
     def get_url_data(self, url: str, max_tries=10):
@@ -113,7 +118,7 @@ class UrlCrawler(object):
 
     def url_crawling(self, category_name: str):
         # Multi Process PID
-        print(category_name + " PID: " + str(os.getpid()))
+        logger.info(f"{category_name} PID: {str(os.getpid())}")
 
         # 기사 URL 형식
         url = "http://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=" + str(
@@ -122,7 +127,7 @@ class UrlCrawler(object):
         # 2020년 start_month월 ~ end_month 날짜까지 기사를 수집합니다.
         day_urls = self.make_news_page_url(url, self.date['start_month'], self.date['start_day'],
                                            self.date['end_month'], self.date['end_day'])
-        print(category_name + " Urls are generated")
+        logger.info(f"{category_name} Urls are generated")
         # day_urls: 카테+날짜(day)를 포함한 url로, 이 안에서 크롤링 대상이 될 url을 가져온다.
 
         count = 0
@@ -157,8 +162,8 @@ class UrlCrawler(object):
                     count += len(news_metadata)
                     news_metadata = []
                 except Exception as e:
-                    print(e, '\n' + category_name + " PID: " + str(os.getpid()) + " Date: " +
-                          URL.split('&')[-2].split('=')[1] + "Is FAILED")
+                    logger.error(f"{e} \n category_name PID: {str(os.getpid())} Date: \
+                                 {URL.split('&')[-2].split('=')[1]} Is FAILED.")
             else:
                 continue
 
@@ -168,10 +173,10 @@ class UrlCrawler(object):
                 Writer.insert_values_to_db('news_metadata_temp', news_metadata)
                 count += len(news_metadata)
             except Exception as e:
-                print(e, '\n' + category_name + " PID: " + str(os.getpid()) + " Date: " +
-                      URL.split('&')[-2].split('=')[1] + "Is FAILED")
+                logger.error(f"{e} \n category_name PID: {str(os.getpid())} Date: \
+                             {URL.split('&')[-2].split('=')[1]} Is FAILED.")
 
-        print(f"Done: {category_name} PID: {str(os.getpid())} /{count} url")
+        logger.info(f"Done: {category_name} PID: {str(os.getpid())} /{count} url")
 
     def start(self):
         # MultiProcess 크롤링 시작
