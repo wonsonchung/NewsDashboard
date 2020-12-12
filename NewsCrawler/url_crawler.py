@@ -1,26 +1,25 @@
 from time import sleep
 from bs4 import BeautifulSoup
 from multiprocessing import Process
-from NewsCrawler.exceptions import *
-from NewsCrawler.articleparser import ArticleParser
-from NewsCrawler.writer import Writer
 import os
-import platform
 import calendar
 import requests
 import re
+from datetime import datetime
 from typing import List, Dict
+from NewsCrawler.category import categories
+from NewsCrawler.exceptions import *
+from NewsCrawler.articleparser import ArticleParser
+from NewsCrawler.writer import Writer
 
 
 class UrlCrawler(object):
 
     def __init__(self):
-        self.categories = {'정치': 100, '경제': 101, '사회': 102, '생활문화': 103, '세계': 104, 'IT과학': 105, '오피니언': 110,
-                           'politics': 100, 'economy': 101, 'society': 102, 'living_culture': 103, 'world': 104,
-                           'IT_science': 105, 'opinion': 110}
+        self.year = datetime.today().year # 2020 년 대신 올해를 인수로 받
+        self.categories = categories
         self.selected_categories = []
         self.date = {'start_month': 0, 'start_day': 0, 'end_month': 0, 'end_day': 0}
-        self.user_operating_system = str(platform.system())
         self.headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 6.3; Win64; x64)\
                                         # AppleWebKit/537.36 (KHTML, like Gecko)\
                                          Chrome/63.0.3239.132 Safari/537.36',
@@ -60,13 +59,13 @@ class UrlCrawler(object):
             else:
                 if month == start_month:
                     month_startday = start_day
-                    month_endday = calendar.monthrange(2020, month)[1]  # 해당 월의 말일
+                    month_endday = calendar.monthrange(self.year, month)[1]  # 해당 월의 말일
                 elif month == end_month:
                     month_startday = 1
                     month_endday = end_day
                 else:
                     month_startday = 1
-                    month_endday = calendar.monthrange(2020, month)[1]
+                    month_endday = calendar.monthrange(self.year, month)[1]
 
             for day in range(month_startday, month_endday + 1):
                 if len(str(month)) == 1:
@@ -75,7 +74,7 @@ class UrlCrawler(object):
                     day = "0" + str(day)
 
                 # 날짜별로 Page Url 생성
-                url = category_url + '2020' + str(month) + str(day)
+                url = category_url + str(self.year) + str(month) + str(day)
                 # totalpage는 네이버 페이지 구조를 이용해서 page=10000으로 지정해 totalpage를 알아냄
                 # page=10000을 입력할 경우 페이지가 존재하지 않기 때문에 page=totalpage로 이동 됨 (Redirect)
                 totalpage = self.find_news_totalpage(url + "&page=10000")
