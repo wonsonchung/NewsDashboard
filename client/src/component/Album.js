@@ -71,28 +71,28 @@ function Album() {
       <AppBar position="relative" style={{ background: NAVER_COLOR }}>
         <Toolbar>
           <LibraryBooksIcon className={classes.icon} />
-          <Typography variant="h6" color="inherit" noWrap >NewsDashboard</Typography>
+          <Typography variant="h6" color="inherit" noWrap >YBIGTA NEWS DASHBOARD</Typography>
         </Toolbar>
       </AppBar>
       <main>
         {/* Hero unit */}
         <div className={classes.heroContent}>
           <Container maxWidth="sm">
-            <Typography component="h1" variant="h2" color="textPrimary" align="center">
-              News Dashboard
+            <Typography component="h1" variant="h2" color="textPrimary" align="left">
+              NEWS DASHBOARD
             </Typography>
-            <Typography variant="h5"  color="textSecondary" align="center">
-                네이버 뉴스를 모아보자!! (텍스트 수정 요망)
+            <Typography variant="h6"  color="textSecondary" align="center">
+                <br/><br/>2020년 12월 22일
             </Typography>
             <div className={classes.heroButtons}>
-                <Button>Hot</Button>
-                <Button color="primary">정치</Button>
-                <Button color="secondary">경제</Button>
-                <Button color="primary">사회</Button>
-                <Button color="secondary">생활문화</Button>
+                <Button color="secondary">Hot</Button>
+                <Button color="#5C1349">정치</Button>
+                <Button color="#5C1349">경제</Button>
+                <Button color="#5C1349">사회</Button>
+                <Button color="#5C1349">생활문화</Button>
                 <Button color="#5C1349">세계</Button>
-                <Button color="secondary">IT과학</Button>
-                <Button color="primary">오피니언</Button>
+                <Button color="#5C1349">IT과학</Button>
+                <Button color="#5C1349">오피니언</Button>
             </div>
           </Container>
         </div>
