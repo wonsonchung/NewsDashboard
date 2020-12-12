@@ -27,12 +27,13 @@ class UrlCrawler(object):
                         "Pragma": "no-cache",
                         "Cache-Control": "no-cache"}
 
-    def set_category(self, *args: List[str]):
+    def set_category(self, cate_list: List[str]):
         """ 한글로 받은 카테고리를 고유번호로 매핑 """
-        for key in args:
+        for key in cate_list:
             if self.categories.get(key) is None:
                 raise InvalidCategory(key)
-        self.selected_categories = args
+
+        self.selected_categories = cate_list
         print(self.selected_categories)
 
     def set_date_range(self, start_month: int, start_day: int, end_month: int, end_day: int):
@@ -143,7 +144,6 @@ class UrlCrawler(object):
 
             # 각 페이지에 있는 기사들의 url 저장
             for line in post_temp:
-                metadata = {}
                 # https://news.naver.com/main/read.nhn?mode=LSD&mid=sec&sid1=100&oid=056&aid=0010424247 이런애들
                 _url = line.a.get('href')  # 해당되는 page에서 모든 기사들의 URL을 post 리스트에 넣음
                 metadata = ArticleParser.create_metadata(URL, _url)
@@ -163,10 +163,10 @@ class UrlCrawler(object):
                 continue
 
         if len(news_metadata) > 0:
+            # batch size 보다 적게 모인 마지막 뉴스들을 따로 써주기
             try:
                 Writer.insert_values_to_db('news_metadata_temp', news_metadata)
                 count += len(news_metadata)
-                news_metadata = []
             except Exception as e:
                 print(e, '\n' + category_name + " PID: " + str(os.getpid()) + " Date: " +
                       URL.split('&')[-2].split('=')[1] + "Is FAILED")

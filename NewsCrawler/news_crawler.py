@@ -1,22 +1,22 @@
 from time import sleep
 from bs4 import BeautifulSoup
 from multiprocessing import Process
-from NewsCrawler.exceptions import *
-from NewsCrawler.articleparser import ArticleParser
-from NewsCrawler.writer import Writer
 import os
 import platform
 import requests
-from typing import List, Dict
+from typing import List
 import random
 import string
+
+from NewsCrawler.exceptions import *
+from NewsCrawler.articleparser import ArticleParser
+from NewsCrawler.writer import Writer
+from NewsCrawler.category import categories
 
 
 class ArticleCrawler(object):
     def __init__(self, start_date: str, end_date: str):
-        self.categories = {'정치': 100, '경제': 101, '사회': 102, '생활문화': 103, '세계': 104, 'IT과학': 105, '오피니언': 110,
-                           'politics': 100, 'economy': 101, 'society': 102, 'living_culture': 103, 'world': 104,
-                           'IT_science': 105, 'opinion': 110}
+        self.categories = categories
         self.selected_categories = []
         self.start_date = start_date
         self.end_date = end_date
@@ -29,12 +29,12 @@ class ArticleCrawler(object):
                         "Cache-Control": "no-cache"}
         self.done_aid = []
 
-    def set_category(self, *args: List[str]):
+    def set_category(self, cate_list: List[str]):
         """ 한글로 받은 카테고리를 고유번호로 매핑 """
-        for key in args:
+        for key in cate_list:
             if self.categories.get(key) is None:
                 raise InvalidCategory(key)
-        self.selected_categories = args
+        self.selected_categories = cate_list
         print(self.selected_categories)
 
     def crawling(self, category_name):
@@ -47,9 +47,7 @@ class ArticleCrawler(object):
         delimiter = ''.join(random.choices(string.digits, k=4))
 
         batch_size = 1000  # 10000개씩 쪼개서 s3에 넣자
-        i = 0
         failed_urls = []  # 실패한 기사들은 다시 시도할 수 있게 따로 db에 써두자
-        failed_count = 0
         for i in range(int(len(crawling_targets) / batch_size) + 1):
             batch = {}
             for target in crawling_targets[i * batch_size:(i + 1) * batch_size]:
@@ -96,7 +94,7 @@ class ArticleCrawler(object):
                         continue
 
                     self.done_aid.append(aid)
-                    batch[aid] = {"category": category, "aid": aid, "date": text_date, "title": text_headline, \
+                    batch[aid] = {"category": category, "aid": aid, "date": text_date, "title": text_headline,
                                   "content": text_sentence, "company": text_company}
 
                     del text_company, text_sentence, text_headline
@@ -107,14 +105,12 @@ class ArticleCrawler(object):
                 except IndexError:
                     value = {"aid": aid, "url": url}
                     failed_urls.append(value)
-                    print(f"failed: {value}")
                     del request_content, document_content
                     pass
                 except Exception as e:  # UnicodeEncodeError ..
                     print(f"Parsing failed for url:{url}, Error: {e}")
                     value = {"aid": aid, "url": url}
                     failed_urls.append(value)
-                    print(f"failed: {value}")
                     del request_content, document_content
                     pass
 
@@ -124,20 +120,21 @@ class ArticleCrawler(object):
                 Writer.write_json_to_s3(category_name, batch, file_name)
                 print(f"writing {category_name}/{file_name}.json is Done.")
             except Exception as e:
-                print(f"Failed to write in s3: {category_name}, {self.start_date}, {self.end_date}, batch: {i}")
+                print(f"Failed to write in s3: {file_name}, batch: {i}, Error: {e}")
 
         if failed_urls:
             # 실패한 애들은 따로 DB 에 넣어준다
             Writer.insert_values_to_db('failed_urls', failed_urls)
             failed_count = len(failed_urls)
             del failed_urls
+        else:
+            failed_count = 0
 
         # 크롤링된 id는 db에서 news_crawled = true로 바꿔준다
         if self.done_aid:
             batch_size = 2000
-            i = 0
-            for i in range(int(len(self.done_aid) / batch_size) + 1):
-                batch = self.done_aid[i * batch_size: (i + 1) * batch_size]
+            for j in range(int(len(self.done_aid) / batch_size) + 1):
+                batch = self.done_aid[j * batch_size: (j + 1) * batch_size]
 
                 Writer.update_metadata_crawled_true(batch)
 
