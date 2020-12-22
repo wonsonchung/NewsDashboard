@@ -8,7 +8,6 @@ function Card() {
   return (
     <React.Fragment>
         <CssBaseline/>
-
     </React.Fragment>
   );
 }

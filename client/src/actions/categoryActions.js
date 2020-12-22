@@ -5,7 +5,6 @@ const setCategory = (cate) => {
     }
 }
 
-
 export default {
     setCategory,
 }

@@ -8,7 +8,6 @@ function Front() {
   return (
     <React.Fragment>
         <CssBaseline/>
-
     </React.Fragment>
   );
 }

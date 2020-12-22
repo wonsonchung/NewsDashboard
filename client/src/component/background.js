@@ -48,7 +48,6 @@ function Background(){
                         selected={startDate}
                         onChange={date => setStartDate(date)} />
                       </div>
-                      
                     </Container>
                 </Container>
                 <Container maxWidth="md">

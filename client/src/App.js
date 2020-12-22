@@ -13,17 +13,18 @@ import {Copyright} from './component/Copyright';
 import {NAVER_COLOR, BLUE_COLOR} from './models/colors';
 import {DATA} from './component/Data';
 
+
 const App = () => {
   const counter = useSelector(state => state.counter)
   const currentUser = useSelector(state => state.currentUser)
   const currentCategory = useSelector(state => state.currentCategory)
+  const [category, setCategory] = useState('경제');
   const dispatch = useDispatch()
-  
+
   const user = {name: "Rei"}
   const classes = useStyles();
-  const [category, setCategory] = useState('경제');
   const datas = DATA;
-
+  
   useEffect(() => {
     dispatch(allActions.userActions.setUser(user))
     dispatch(allActions.categoryActions.setCategory(category))
@@ -32,7 +33,7 @@ const App = () => {
       const cate = doc.cate;
       const datetime = doc.datetime;
       const title = doc.title;
-      if ((category == cate)) {
+      if (category == cate) {
         items.push({
           cate: cate,
           datetime: datetime,
@@ -118,6 +119,7 @@ const useStyles = makeStyles((theme) => ({
   },
   category: {
     backgroundColor: theme.palette.background.paper,
+    fontSize : '10px'
   },
   button: {
     color : 'black',
