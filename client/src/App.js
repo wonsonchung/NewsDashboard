@@ -8,7 +8,7 @@ import allActions from './actions'
 import Album from './component/Album'
 import Background from './component/Background';
 import Category from './component/Category';
-import Grid from './component/Grid';
+import GridList from './component/GridList';
 import {Copyright} from './component/Copyright';
 import {NAVER_COLOR, BLUE_COLOR} from './models/colors';
 import {DATA} from './component/Data';
@@ -90,7 +90,7 @@ const App = () => {
           </div>
         </main>
       </React.Fragment>
-      <Grid category={currentCategory.category}/>
+      <GridList category={currentCategory.category}/>
       <Copyright/>
       {
         currentUser.loggedIn ? 
