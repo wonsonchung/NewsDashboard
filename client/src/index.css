@@ -11,3 +11,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {font-family: 'NanumSquare'; src: url(./models/NanumSquare.ttf) format('truetype');}
+
+
+
+@font-face {font-family: 'Javatext'; src: url(./models/javatext.ttf) format('truetype');}
