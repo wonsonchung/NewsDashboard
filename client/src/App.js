@@ -7,7 +7,6 @@ import './App.css';
 import allActions from './actions'
 import Album from './component/Album'
 import Background from './component/Background';
-import Category from './component/Category';
 import GridList from './component/GridList';
 import {Copyright} from './component/Copyright';
 import {NAVER_COLOR, BLUE_COLOR} from './models/colors';
