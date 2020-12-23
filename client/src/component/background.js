@@ -51,7 +51,7 @@ function Background(){
                     </Container>
                 </Container>
                 <Container maxWidth="md">
-                    <div className={classes.dateChild1}>
+                    <div className={classes.dateChild}>
                       <Typography>
                         <Moment format="YYYY년 MM월 DD일" date={startDate} />
                       </Typography>  
@@ -81,28 +81,6 @@ const useStyles = makeStyles((theme) => ({
     //   flexDirection: 'row',
         display:'flex',
     },
-    heroButtons: {
-      marginTop: theme.spacing(4),
-    },  
-    cardGrid: {
-      paddingTop: theme.spacing(8),
-      paddingBottom: theme.spacing(8),
-    },
-    card: {
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-    },
-    cardMedia: {
-      paddingTop: '56.25%', // 16:9
-    },
-    cardContent: {
-      flexGrow: 1,
-    },
-    footer: { 
-      backgroundColor: theme.palette.background.paper,
-      padding: theme.spacing(6),
-    },
     top_content: {
         margin:"auto",
         width:'65%',
@@ -120,7 +98,7 @@ const useStyles = makeStyles((theme) => ({
       display : 'flex',
       flexDirection : 'row',
     },
-    dateChild1: {
+    dateChild: {
       position : 'absolute',
       left: 0,
       right : 0,
